@@ -204,22 +204,15 @@ Record: 0
 
 <p id="bestScore"></p>
 
-<button class="retry"
-onclick="restartGame()">
+<button class="retry" onclick="restartGame()">
 🔄 Rigioca
 </button>
 
-function goHome() {
+<button class="fun" onclick="goHome()">
+🏠 Home
+</button>
 
-    running = false;
-
-    iceList.forEach(i => i.el.remove());
-    iceList = [];
-
-    game.style.display = "none";
-    over.style.display = "none";
-    home.style.display = "flex";
-
+</div>
 }
 
 </div>
@@ -306,6 +299,18 @@ iceList = [];
 setTimeout(() => {
     startGame();
 },100);
+
+}
+    function goHome(){
+
+    running = false;
+
+    iceList.forEach(i => i.el.remove());
+    iceList = [];
+
+    game.style.display = "none";
+    over.style.display = "none";
+    home.style.display = "flex";
 
 }
 function createIce(){
