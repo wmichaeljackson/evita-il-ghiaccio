@@ -209,9 +209,18 @@ onclick="restartGame()">
 🔄 Rigioca
 </button>
 
-<button class="fun" onclick="goHome()">
-🏠 Home
-</button>
+function goHome() {
+
+    running = false;
+
+    iceList.forEach(i => i.el.remove());
+    iceList = [];
+
+    game.style.display = "none";
+    over.style.display = "none";
+    home.style.display = "flex";
+
+}
 
 </div>
 
