@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>❄️ Evita il Ghiaccio</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+font-family:Arial,Helvetica,sans-serif;
+background:linear-gradient(#4aa3ff,#dff6ff);
+overflow:hidden;
+color:white;
+}
+
+button{
+cursor:pointer;
+border:none;
+border-radius:12px;
+padding:12px 22px;
+font-size:18px;
+font-weight:bold;
+transition:.2s;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+#home,#game,#gameover{
+position:absolute;
+width:100%;
+height:100%;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+text-align:center;
+}
+
+#game{
+display:none;
+background:linear-gradient(#4aa3ff,#dff6ff);
+overflow:hidden;
+}
+
+#gameover{
+display:none;
+background:rgba(0,0,0,.8);
+z-index:20;
+}
+
+h1{
+font-size:52px;
+margin-bottom:20px;
+text-shadow:2px 2px 5px black;
+}
+
+p{
+font-size:20px;
+margin:10px;
+}
+
+.menu{
+display:flex;
+flex-direction:column;
+gap:15px;
+margin-top:25px;
+}
+
+.play{
+background:#2ecc71;
+color:white;
+}
+
+.comments{
+background:#e67e22;
+color:white;
+}
+
+.fun{
+background:#9b59b6;
+color:white;
+}
+
+.retry{
+background:#2ecc71;
+color:white;
+margin-top:20px;
+}
+
+#score{
+position:absolute;
+left:20px;
+top:20px;
+font-size:24px;
+font-weight:bold;
+color:white;
+text-shadow:2px 2px 4px black;
+}
+
+#record{
+position:absolute;
+right:20px;
+top:20px;
+font-size:24px;
+font-weight:bold;
+color:white;
+text-shadow:2px 2px 4px black;
+}
+
+#player{
+position:absolute;
+bottom:25px;
+width:70px;
+height:70px;
+background:#27ae60;
+border-radius:50%;
+box-shadow:0 0 20px rgba(0,0,0,.4);
+}
+
+.ice{
+position:absolute;
+width:40px;
+height:40px;
+background:white;
+border-radius:8px;
+box-shadow:0 0 10px rgba(255,255,255,.9);
+}
+
+@media(max-width:700px){
+
+h1{
+font-size:36px;
+}
+
+button{
+width:250px;
+}
+
+#player{
+width:60px;
+height:60px;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<div id="home">
+
+<h1>❄️ Evita il Ghiaccio</h1>
+
+<p>Sposta il mouse per evitare i blocchi di ghiaccio!</p>
+
+<div class="menu">
+
+<button class="play" onclick="startGame()">
+▶ Gioca
+</button>
+
+<button class="comments"
+onclick="window.open('https://github.com/wmichaeljackson/evita-il-ghiaccio/discussions/1','_blank')">
+💬 Commenti
+</button>
+
+<button class="fun"
+onclick="location.href='https://wmichaeljackson.github.io/fun.games/'">
+🎮 fun.games
+</button>
+
+</div>
+
+</div>
+
+<div id="game">
+
+<div id="score">
+Punti: 0
+</div>
+
+<div id="record">
+Record: 0
+</div>
+
+<div id="player"></div>
+
+</div>
+
+<div id="gameover">
+
+<h1>💥 Game Over</h1>
+
+<p id="finalScore"></p>
+
+<p id="bestScore"></p>
+
+<button class="retry"
+onclick="restartGame()">
+🔄 Rigioca
+</button>
+
+<button class="fun" onclick="goHome()">
+🏠 Home
+</button>
+
+</div>
+
+<script>
+
+const home=document.getElementById("home");
+const game=document.getElementById("game");
+const over=document.getElementById("gameover");
+
+const player=document.getElementById("player");
+
+const scoreTxt=document.getElementById("score");
+const recordTxt=document.getElementById("record");
+
+const finalScore=document.getElementById("finalScore");
+const bestScore=document.getElementById("bestScore");
+
+let score=0;
+let speed=4;
+let spawn=900;
+let running=false;
+
+let iceList=[];
+
+let record=localStorage.getItem("ghiaccioRecord")||0;
+
+recordTxt.innerHTML="Record: "+record;
+
+let playerX=window.innerWidth/2;
+
+player.style.left=playerX+"px";
+document.addEventListener("mousemove",function(e){
+
+if(!running) return;
+
+playerX=e.clientX-player.offsetWidth/2;
+
+if(playerX<0) playerX=0;
+
+if(playerX>window.innerWidth-player.offsetWidth)
+playerX=window.innerWidth-player.offsetWidth;
+
+player.style.left=playerX+"px";
+
+});
+
+function startGame(){
+
+home.style.display="none";
+over.style.display="none";
+game.style.display="flex";
+
+score=0;
+speed=4;
+spawn=900;
+
+scoreTxt.innerHTML="Punti: 0";
+
+running=true;
+
+player.style.left=(window.innerWidth/2-player.offsetWidth/2)+"px";
+
+iceList.forEach(i=>i.remove());
+iceList=[];
+
+recordTxt.innerHTML="Record: "+record;
+
+createIce();
+
+gameLoop();
+
+difficultyLoop();
+
+}
+
+function restartGame(){
+
+running = false;
+
+iceList.forEach(i => i.el.remove());
+iceList = [];
+
+setTimeout(() => {
+    startGame();
+},100);
+
+}
+function createIce(){
+
+if(!running) return;
+
+const ice=document.createElement("div");
+
+ice.className="ice";
+
+ice.style.left=Math.random()*
+(window.innerWidth-40)+"px";
+
+ice.style.top="-50px";
+
+game.appendChild(ice);
+
+iceList.push({
+
+el:ice,
+
+x:parseFloat(ice.style.left),
+
+y:-50
+
+});
+
+setTimeout(createIce,spawn);
+
+}
+
+function gameLoop(){
+
+if(!running) return;
+
+for(let i=iceList.length-1;i>=0;i--){
+
+let g=iceList[i];
+
+g.y+=speed;
+
+g.el.style.top=g.y+"px";
+
+const px=player.offsetLeft;
+const py=player.offsetTop;
+
+const ix=g.x;
+const iy=g.y;
+
+if(
+
+ix<px+70 &&
+ix+40>px &&
+iy<py+70 &&
+iy+40>py
+
+){
+
+gameOver();
+return;
+
+}
+
+if(g.y>window.innerHeight){
+
+g.el.remove();
+
+iceList.splice(i,1);
+
+score++;
+
+scoreTxt.innerHTML="Punti: "+score;
+
+if(score>record){
+
+record=score;
+
+localStorage.setItem("ghiaccioRecord",record);
+
+recordTxt.innerHTML="Record: "+record;
+
+}
+
+}
+
+}
+
+requestAnimationFrame(gameLoop);
+
+}
+
+function difficultyLoop(){
+
+if(!running) return;
+
+speed+=0.3;
+
+if(spawn>250){
+
+spawn-=40;
+
+}
+
+setTimeout(difficultyLoop,3000);
+
+}
+
+function gameOver(){
+
+running=false;
+
+finalScore.innerHTML="Hai totalizzato "+score+" punti!";
+
+bestScore.innerHTML="Record: "+record;
+
+game.style.display="none";
+
+over.style.display="flex";
+
+}
+
+window.addEventListener("resize",function(){
+
+if(playerX>window.innerWidth-player.offsetWidth){
+
+playerX=window.innerWidth-player.offsetWidth;
+
+player.style.left=playerX+"px";
+
+}
+
+});
+
+</script>
+
+</body>
+</html>
